@@ -49,8 +49,8 @@ def login_user(request):
 @jwt_authentication_required
 def chat(request):
     message = request.data.get("message")
-    response = ChatGPTService.send_request(message)  # Call your ChatGPT service
-    user = request.user  # Get the user instance directly
+    response = ChatGPTService.send_request(message)
+    user = request.user
     serilized_data = ConversationSerializer(
         data={"user": user.id, "user_message": message, "chatgpt_response": response}
     )

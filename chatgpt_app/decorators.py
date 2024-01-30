@@ -1,5 +1,3 @@
-# chatgpt_app/decorators.py
-
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,9 +21,7 @@ def jwt_authentication_required(view_func):
         try:
             access_token = AccessToken(token)
             user = access_token.payload.get("user_id")
-            request.user = User.objects.get(
-                pk=user
-            )  # Assuming your User model has a 'pk' field as the user ID
+            request.user = User.objects.get(pk=user)
         except TokenError:
             return Response(
                 {"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED

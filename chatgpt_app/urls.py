@@ -1,5 +1,3 @@
-# chatgpt_app/urls.py
-
 from django.urls import path
 from .views import chat, getChat, register_user, login_user
 

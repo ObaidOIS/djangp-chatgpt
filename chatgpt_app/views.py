@@ -1,20 +1,16 @@
-# chatgpt_app/views.py
-
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .ChatGPTService import ChatGPTService  # Import your ChatGPT service
+from .ChatGPTService import ChatGPTService
 from django.contrib.auth.models import User
-from rest_framework.decorators import permission_classes, api_view
+from rest_framework.decorators import api_view
 from .models import Conversation
-import requests
 from django.contrib.auth import authenticate
+from .decorators import jwt_authentication_required
+from .serializer import ConversationSerializer
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
 def register_user(request):
     username = request.data.get("username")
     password = request.data.get("password")
@@ -33,7 +29,6 @@ def register_user(request):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
 def login_user(request):
     username = request.data.get("username")
     password = request.data.get("password")
@@ -50,20 +45,25 @@ def login_user(request):
         )
 
 
-# @permission_classes([AllowAny])
-permission_classes = [IsAuthenticated]
-
-
-class ChatView(APIView):
-    def post(self, request):
-        message = request.data.get("message")
-        print(message)
-        response = ChatGPTService.send_request(message)  # Call your ChatGPT service
-        Conversation.objects.create(
-            user=request.user, message=message, response=response
-        )
+@api_view(["POST"])
+@jwt_authentication_required
+def chat(request):
+    message = request.data.get("message")
+    response = ChatGPTService.send_request(message)  # Call your ChatGPT service
+    user = request.user  # Get the user instance directly
+    serilized_data = ConversationSerializer(
+        data={"user": user.id, "user_message": message, "chatgpt_response": response}
+    )
+    if serilized_data.is_valid():
+        serilized_data.save()
         return Response({"message": message, "response": response})
+    else:
+        return Response({"error": serilized_data.errors}, status=400)
 
-    def get(self, request):
-        conversations = Conversation.objects.filter(user=request.user)
-        return Response({"conversations": conversations})
+
+@api_view(["GET"])
+@jwt_authentication_required
+def getChat(request):
+    conversations = Conversation.objects.filter(user=request.user)
+    conversations = ConversationSerializer(conversations, many=True).data
+    return Response({"conversations": conversations})

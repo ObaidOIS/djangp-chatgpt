@@ -1,10 +1,11 @@
 # chatgpt_app/urls.py
 
 from django.urls import path
-from .views import ChatView, register_user, login_user
+from .views import chat, getChat, register_user, login_user
 
 urlpatterns = [
     path("register/", register_user, name="register"),
     path("login/", login_user, name="login"),
-    path("chat/", ChatView.as_view(), name="chatgpt-view"),
+    path("chat/", chat, name="chatgpt-view"),
+    path("getChat/", getChat, name="getChat"),
 ]
